@@ -251,22 +251,84 @@ def _merge_bindings(base: KeyBindings, extra: KeyBindings) -> KeyBindings:
     return merged
 
 
+def make_composite_resolver(dyn, static_resolver):
+    """Build a resolver that routes param nodes to the dynamic provider.
+
+    When the current node has ``param`` set, OR has a child whose ``param`` is set,
+    candidates come from ``dyn.provide(param_node, session)``. Otherwise the
+    static resolver returns the children of the current node.
+    """
+    async def composite(session, i18n):
+        node = session.current_node
+        param_node = None
+        if node is not None and node.param is not None:
+            param_node = node
+        elif node is not None:
+            for child in node.children:
+                if child.param is not None:
+                    param_node = child
+                    break
+        if param_node is not None:
+            result = await dyn.provide(param_node, session)
+            if result.error is not None:
+                raise RuntimeError(f"{result.error.code}: {result.error.message}")
+            return [
+                Candidate(token=item.token, label=item.label, desc=item.desc, source=item.source)
+                for item in result.candidates
+            ]
+        return static_resolver(session, i18n)
+
+    return composite
+
+
 def run_app(tree: CommandTree, *, locale: str | None = None) -> None:
     _print_log_path()
-    # Wire keybindings + static candidate resolver via a deferred import so
+    # Wire keybindings + composite candidate resolver via deferred imports so
     # cpr.tui.app stays import-cycle-free (keys/candidates depend on app).
+    from cpr.core.candidates import DynamicCandidateProvider
+    from cpr.core.executor import Executor
     from cpr.core.slash import SlashCommandParser
     from cpr.tui.candidates import AsyncCandidateRefresher, static_resolver
     from cpr.tui.keys import build_keybindings
 
     holder: dict[str, object] = {}
     parser = SlashCommandParser()
+    executor = Executor()
+    dyn = DynamicCandidateProvider(executor)
 
     def extra(state: WorkspaceState, input_buffer: Buffer, content_buffer: Buffer) -> KeyBindings:
+        composite = make_composite_resolver(dyn, static_resolver)
+
         refresher = AsyncCandidateRefresher(
-            resolver=static_resolver,
+            resolver=composite,
             invalidate=lambda: holder["app"].invalidate() if "app" in holder else None,
         )
+
+        async def execute(state: WorkspaceState, command: str) -> None:
+            shell_mode = "bash-lc-source"
+            node = state.session.current_node
+            if node is not None and node.execute is not None:
+                shell_mode = node.execute.shell_mode
+            content_buffer.text = content_buffer.text + f"\n$ {command}\n"
+            result = await executor.run(command, shell_mode)
+            from cpr.core.session import SessionResult
+
+            state.session.record_execution(
+                command,
+                SessionResult(
+                    ok=result.ok,
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                    exit_code=result.exit_code,
+                ),
+            )
+            if result.stdout:
+                content_buffer.text = content_buffer.text + result.stdout
+            if result.stderr:
+                content_buffer.text = content_buffer.text + result.stderr
+            content_buffer.text = content_buffer.text + f"[exit={result.exit_code} ok={result.ok}]\n"
+            dyn.invalidate_after_command(command, result.ok)
+            await refresher.refresh(state)
 
         def slash(state: WorkspaceState, text: str) -> None:
             result = parser.handle(text, state.session)
@@ -274,7 +336,7 @@ def run_app(tree: CommandTree, *, locale: str | None = None) -> None:
                 return
             content_buffer.text = content_buffer.text + f"{text}\n{result.message}\n"
 
-        return build_keybindings(state, input_buffer, refresher, slash=slash)
+        return build_keybindings(state, input_buffer, refresher, execute=execute, slash=slash)
 
     app, state, _input, _content = build_app(tree, locale=locale, extra_keys=extra)
     holder["app"] = app
@@ -288,5 +350,6 @@ __all__ = [
     "WorkspaceState",
     "build_app",
     "build_layout",
+    "make_composite_resolver",
     "run_app",
 ]
