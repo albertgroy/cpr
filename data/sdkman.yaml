@@ -1,0 +1,200 @@
+# SDKMAN command tree for the CPR T-001 MVP.
+#
+# Schema (matches cpr.core.model.load_command_tree):
+#   nodes:
+#     - id: str          # equals tokens joined by '.'
+#       tokens: [str]    # path tokens; param leaf token is "{name}"
+#       title: {locale: str}
+#       desc:  {locale: str}
+#       children: [id]   # optional, parsed via two-pass link
+#       param: {source}  # optional; only on a "{name}" leaf token
+#       execute: object | true | false  # optional; default command = tokens joined by space
+#
+# Coverage: the 7 commands listed in CLAUDE.md "First prototype scope":
+#   1. sdk
+#   2. sdk list
+#   3. sdk list java
+#   4. sdk install java <identifier>
+#   5. sdk use java <installed-version>
+#   6. sdk default java <installed-version>
+#   7. sdk current java
+#
+# en-US strings are intentionally placeholders here; the i18n loader logs a
+# warning and falls back. Final en-US copy lands in T-002.
+
+nodes:
+  # ----- root: sdk -----
+  - id: sdk
+    tokens: [sdk]
+    title:
+      zh-CN: SDKMAN 命令
+      en-US: SDKMAN
+    desc:
+      zh-CN: SDKMAN 工具入口；可继续选择子命令，或直接 Enter 执行查看帮助。
+      en-US: SDKMAN tool entry point.
+    children:
+      - sdk.list
+      - sdk.install
+      - sdk.use
+      - sdk.default
+      - sdk.current
+    execute:
+      shell_mode: bash-lc-source
+
+  # ----- sdk list -----
+  - id: sdk.list
+    tokens: [sdk, list]
+    title:
+      zh-CN: 列出候选 SDK
+      en-US: List candidates
+    desc:
+      zh-CN: 列出 SDKMAN 支持的所有候选；可继续追加 java 查看 Java 列表。
+      en-US: List all SDKMAN candidates.
+    children:
+      - sdk.list.java
+    execute:
+      shell_mode: bash-lc-source
+
+  - id: sdk.list.java
+    tokens: [sdk, list, java]
+    title:
+      zh-CN: 列出 Java 版本
+      en-US: List Java versions
+    desc:
+      zh-CN: 显示 SDKMAN 提供的所有 Java Identifier；可作为 install 的输入。
+      en-US: Show all Java identifiers provided by SDKMAN.
+    execute:
+      shell_mode: bash-lc-source
+
+  # ----- sdk install -----
+  - id: sdk.install
+    tokens: [sdk, install]
+    title:
+      zh-CN: 安装 SDK
+      en-US: Install SDK
+    desc:
+      zh-CN: 安装某个候选 SDK；当前 MVP 仅覆盖 java 子树。
+      en-US: Install a candidate SDK.
+    children:
+      - sdk.install.java
+
+  - id: sdk.install.java
+    tokens: [sdk, install, java]
+    title:
+      zh-CN: 安装 Java
+      en-US: Install Java
+    desc:
+      zh-CN: 选择 Identifier 后将下载并写入 ~/.sdkman；属于会修改环境的命令。
+      en-US: Install a Java identifier; modifies ~/.sdkman.
+    children:
+      - sdk.install.java.{identifier}
+
+  - id: sdk.install.java.{identifier}
+    tokens: [sdk, install, java, "{identifier}"]
+    title:
+      zh-CN: Java Identifier
+      en-US: Java identifier
+    desc:
+      zh-CN: 来自 `sdk list java` 的 Identifier；候选源动态刷新。
+      en-US: Identifier sourced from `sdk list java`.
+    param:
+      source: sdk.candidates.java.identifiers
+    execute:
+      shell_mode: bash-lc-source
+
+  # ----- sdk use -----
+  - id: sdk.use
+    tokens: [sdk, use]
+    title:
+      zh-CN: 临时切换 SDK 版本
+      en-US: Use SDK (current shell)
+    desc:
+      zh-CN: 在当前 shell 临时切换到某个已安装版本，不影响默认值。
+      en-US: Switch to an installed version for the current shell only.
+    children:
+      - sdk.use.java
+
+  - id: sdk.use.java
+    tokens: [sdk, use, java]
+    title:
+      zh-CN: 临时切换 Java 版本
+      en-US: Use Java (current shell)
+    desc:
+      zh-CN: 在当前 shell 临时切换到某个已安装的 Java 版本。
+      en-US: Switch to an installed Java version for the current shell.
+    children:
+      - sdk.use.java.{version}
+
+  - id: sdk.use.java.{version}
+    tokens: [sdk, use, java, "{version}"]
+    title:
+      zh-CN: 已安装 Java 版本
+      en-US: Installed Java version
+    desc:
+      zh-CN: 来自 ~/.sdkman/candidates/java 的已安装版本；候选源动态刷新。
+      en-US: Installed version under ~/.sdkman/candidates/java.
+    param:
+      source: sdk.installed.java.versions
+    execute:
+      shell_mode: bash-lc-source
+
+  # ----- sdk default -----
+  - id: sdk.default
+    tokens: [sdk, default]
+    title:
+      zh-CN: 设置默认 SDK 版本
+      en-US: Set default SDK
+    desc:
+      zh-CN: 把某个已安装版本设为默认；会写入 SDKMAN 配置。
+      en-US: Set an installed version as the default.
+    children:
+      - sdk.default.java
+
+  - id: sdk.default.java
+    tokens: [sdk, default, java]
+    title:
+      zh-CN: 设置默认 Java 版本
+      en-US: Set default Java
+    desc:
+      zh-CN: 选择已安装版本设为默认 Java；属于会修改环境的命令。
+      en-US: Set an installed Java version as default.
+    children:
+      - sdk.default.java.{version}
+
+  - id: sdk.default.java.{version}
+    tokens: [sdk, default, java, "{version}"]
+    title:
+      zh-CN: 已安装 Java 版本
+      en-US: Installed Java version
+    desc:
+      zh-CN: 来自 ~/.sdkman/candidates/java 的已安装版本；候选源动态刷新。
+      en-US: Installed version under ~/.sdkman/candidates/java.
+    param:
+      source: sdk.installed.java.versions
+    execute:
+      shell_mode: bash-lc-source
+
+  # ----- sdk current -----
+  - id: sdk.current
+    tokens: [sdk, current]
+    title:
+      zh-CN: 显示当前 SDK 版本
+      en-US: Show current SDK
+    desc:
+      zh-CN: 显示当前激活的 SDK 版本；可直接 Enter 执行，也可继续选择 java。
+      en-US: Show currently active SDK; executable on its own.
+    children:
+      - sdk.current.java
+    execute:
+      shell_mode: bash-lc-source
+
+  - id: sdk.current.java
+    tokens: [sdk, current, java]
+    title:
+      zh-CN: 显示当前 Java 版本
+      en-US: Show current Java
+    desc:
+      zh-CN: 显示当前激活的 Java 版本。
+      en-US: Show the currently active Java version.
+    execute:
+      shell_mode: bash-lc-source
