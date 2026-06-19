@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "client_id": "00000000-0000-4000-8000-000000000001",
+  "client_version": "0.2.0",
+  "locale": "en-US",
+  "tool": "sdk",
+  "args": ["install", "java"],
+  "sub_path": ["install", "java"],
+  "help_text": "usage: sdk install java <identifier>",
+  "help_source": "sdk install java --help",
+  "help_truncated_at_size": null
+}

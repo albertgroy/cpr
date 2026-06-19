@@ -1,0 +1,1 @@
+{"schema_version":"1","quota":{"used":50,"limit":50,"reset_at":"2026-06-20T00:00:00Z","reset_in_seconds":28800},"error":{"code":"QUOTA_EXCEEDED","message":"quota exceeded","retry_after_seconds":28800}}
