@@ -253,7 +253,22 @@ def _merge_bindings(base: KeyBindings, extra: KeyBindings) -> KeyBindings:
 
 def run_app(tree: CommandTree, *, locale: str | None = None) -> None:
     _print_log_path()
-    app, _state, _input, _content = build_app(tree, locale=locale)
+    # Wire keybindings + static candidate resolver via a deferred import so
+    # cpr.tui.app stays import-cycle-free (keys/candidates depend on app).
+    from cpr.tui.candidates import AsyncCandidateRefresher, static_resolver
+    from cpr.tui.keys import build_keybindings
+
+    holder: dict[str, object] = {}
+
+    def extra(state: WorkspaceState, input_buffer: Buffer, _content: Buffer) -> KeyBindings:
+        refresher = AsyncCandidateRefresher(
+            resolver=static_resolver,
+            invalidate=lambda: holder["app"].invalidate() if "app" in holder else None,
+        )
+        return build_keybindings(state, input_buffer, refresher)
+
+    app, state, _input, _content = build_app(tree, locale=locale, extra_keys=extra)
+    holder["app"] = app
     app.run()
 
 
