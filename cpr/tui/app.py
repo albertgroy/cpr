@@ -251,6 +251,19 @@ def _merge_bindings(base: KeyBindings, extra: KeyBindings) -> KeyBindings:
     return merged
 
 
+def dispatch_slash(parser, state: "WorkspaceState", content_buffer: Buffer, text: str) -> bool:
+    """Run ``parser.handle`` and append text + message to content_buffer when applicable.
+
+    Returns whether anything was written. Unknown / non-slash inputs leave the
+    buffer untouched (``result.add_history`` is False), per contract.
+    """
+    result = parser.handle(text, state.session)
+    if not result.add_history:
+        return False
+    content_buffer.text = content_buffer.text + f"{text}\n{result.message}\n"
+    return True
+
+
 def make_composite_resolver(dyn, static_resolver):
     """Build a resolver that routes param nodes to the dynamic provider.
 
@@ -331,10 +344,7 @@ def run_app(tree: CommandTree, *, locale: str | None = None) -> None:
             await refresher.refresh(state)
 
         def slash(state: WorkspaceState, text: str) -> None:
-            result = parser.handle(text, state.session)
-            if not result.add_history:
-                return
-            content_buffer.text = content_buffer.text + f"{text}\n{result.message}\n"
+            dispatch_slash(parser, state, content_buffer, text)
 
         return build_keybindings(state, input_buffer, refresher, execute=execute, slash=slash)
 
@@ -350,6 +360,7 @@ __all__ = [
     "WorkspaceState",
     "build_app",
     "build_layout",
+    "dispatch_slash",
     "make_composite_resolver",
     "run_app",
 ]
