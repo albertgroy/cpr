@@ -5,7 +5,7 @@ PYTHON_BIN="${PYTHON_BIN:-python}"
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   PYTHON_BIN="python3"
 fi
-PORT="${CPR_MOCK_PORT:-8765}"
+PORT="${CPR_MOCK_PORT:-$((20000 + RANDOM % 20000))}"
 BASE="http://127.0.0.1:${PORT}"
 TMP_HOME="$(mktemp -d)"
 SERVER_PID=""
