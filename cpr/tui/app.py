@@ -255,17 +255,26 @@ def run_app(tree: CommandTree, *, locale: str | None = None) -> None:
     _print_log_path()
     # Wire keybindings + static candidate resolver via a deferred import so
     # cpr.tui.app stays import-cycle-free (keys/candidates depend on app).
+    from cpr.core.slash import SlashCommandParser
     from cpr.tui.candidates import AsyncCandidateRefresher, static_resolver
     from cpr.tui.keys import build_keybindings
 
     holder: dict[str, object] = {}
+    parser = SlashCommandParser()
 
-    def extra(state: WorkspaceState, input_buffer: Buffer, _content: Buffer) -> KeyBindings:
+    def extra(state: WorkspaceState, input_buffer: Buffer, content_buffer: Buffer) -> KeyBindings:
         refresher = AsyncCandidateRefresher(
             resolver=static_resolver,
             invalidate=lambda: holder["app"].invalidate() if "app" in holder else None,
         )
-        return build_keybindings(state, input_buffer, refresher)
+
+        def slash(state: WorkspaceState, text: str) -> None:
+            result = parser.handle(text, state.session)
+            if not result.add_history:
+                return
+            content_buffer.text = content_buffer.text + f"{text}\n{result.message}\n"
+
+        return build_keybindings(state, input_buffer, refresher, slash=slash)
 
     app, state, _input, _content = build_app(tree, locale=locale, extra_keys=extra)
     holder["app"] = app

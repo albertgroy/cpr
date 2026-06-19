@@ -35,7 +35,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"name={command.name} args={command.args}")
         return 0
-    print("CPR prototype: TUI pending")
+    from cpr.tui.app import run_app
+
+    run_app(tree)
     return 0
 
 

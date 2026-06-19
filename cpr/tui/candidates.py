@@ -58,7 +58,7 @@ def static_resolver(session: CommandSession, i18n: I18nLoader) -> list[Candidate
                     token=child.token,
                     label=i18n.node_text(child.title, child.id),
                     desc=i18n.node_text(child.desc, child.id),
-                    source="dynamic-pending",
+                    source="dynamic",
                 )
             )
             continue
