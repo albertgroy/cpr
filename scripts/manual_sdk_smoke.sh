@@ -38,9 +38,9 @@ if [[ ! -f "$INIT" ]]; then
   exit 2
 fi
 
-set +u
+set +eu
+# shellcheck disable=SC1090
 source "$INIT"
-set -u
 
 echo "[B1/7] sdk"
 sdk version
@@ -67,6 +67,7 @@ echo "[B6/7] sdk current java"
 sdk current java || true
 
 echo "[B7/7] sdk install java <identifier> skipped: destructive/network manual step"
+set -eu
 
 cat <<'NEXT'
 
