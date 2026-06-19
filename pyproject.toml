@@ -25,3 +25,6 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 source = ["cpr/core"]
+
+[tool.setuptools.packages.find]
+include = ["cpr*"]
