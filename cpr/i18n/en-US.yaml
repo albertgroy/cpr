@@ -1,0 +1,86 @@
+# English (US) fixed copy. Every key here MUST also exist in zh-CN.yaml.
+# Placeholders like {name} are filled in by cpr.i18n.I18n.t(..., name=value).
+
+app:
+  name: cpr
+  tagline: AI first-step CLI
+
+cli:
+  no_args: |-
+    cpr — the AI first-step CLI (let an AI write the next argv for you).
+
+    Usage:
+      cpr <tool> [args ...]
+
+    Examples:
+      cpr sdk
+      cpr sdk install java
+      cpr git status
+      cpr --quota
+      cpr --diag
+
+    See `cpr --help` for more.
+  unknown_args: "unrecognized argument: {args}"
+
+render:
+  header_prefix: "$ "
+  usage_label: "Usage"
+  candidates_label: "Candidates"
+  notes_label: "Notes"
+  candidates_more: "… and {count} more (folded)"
+  candidates_kind:
+    id: "id"
+    flag: "flag"
+    subcommand: "subcmd"
+    enum: "enum"
+    value: "value"
+  empty_candidates: "(no candidates)"
+  table_header_token: "TOKEN"
+  table_header_kind: "TYPE"
+  table_header_desc: "DESCRIPTION"
+
+danger:
+  banner: "Danger: {reason}"
+  prompt: "Run it? (y/N) "
+  cancelled: "Cancelled. Nothing was executed."
+  exec_template_label: "Will run"
+
+quota:
+  status: "AI quota: {used}/{limit} (resets in {hours}h)"
+  unknown: "AI quota: unknown"
+
+error:
+  generic_title: "cpr first-step failed"
+  HELP_NOT_FOUND:
+    title: "Unknown command or tool not installed: {tool}"
+    hint: "Confirm `{tool}` is installed and supports `--help`."
+  HELP_TIMEOUT:
+    title: "`{tool} --help` timed out (>{timeout}s)"
+    hint: "Raise client.help_timeout_seconds in ~/.cpr/config."
+  BAD_REQUEST:
+    title: "Protocol error in request: {message}"
+    hint: "Usually a client/server bug — please report."
+  INVALID_CLIENT:
+    title: "Invalid client identity: {message}"
+    hint: "Delete client.id in ~/.cpr/config so cpr regenerates one."
+  INVALID_TEMPLATE:
+    title: "AI returned an unsafe exec template (forbidden chars or bad placeholder); please retry."
+    hint: "If it keeps failing, run `cpr --diag` and report prompt_version."
+  SCHEMA_MISMATCH:
+    title: "Client/server protocol version mismatch (client v{client} ↔ server v{server}); please upgrade."
+    hint: "Run `pip install -U cpr` or update your self-hosted server."
+  QUOTA_EXCEEDED:
+    title: "Daily AI quota exhausted ({used}/{limit}); resets in {hours}h."
+    hint: "Point ~/.cpr/config server.endpoint at a self-hosted cpr server to keep going."
+  LLM_PARSE_FAILED:
+    title: "AI parse failed: {message}"
+    hint: "Try a more specific command and retry."
+  LLM_TIMEOUT:
+    title: "AI parse timed out (>{timeout}s)"
+    hint: "Likely transient — retry, or raise server.timeout_seconds."
+  SERVER_ERROR:
+    title: "Server internal error: {message}"
+    hint: "Retry shortly; keep failing — please report."
+  NETWORK_UNREACHABLE:
+    title: "AI server is unreachable; check server.endpoint in ~/.cpr/config."
+    hint: "Local mock: `python scripts/mock_server.py`, then set endpoint to http://127.0.0.1:8765."
