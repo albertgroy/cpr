@@ -38,7 +38,9 @@ if [[ ! -f "$INIT" ]]; then
   exit 2
 fi
 
+set +u
 source "$INIT"
+set -u
 
 echo "[B1/7] sdk"
 sdk version
