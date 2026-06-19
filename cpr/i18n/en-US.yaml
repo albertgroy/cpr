@@ -21,6 +21,8 @@ cli:
 
     See `cpr --help` for more.
   unknown_args: "unrecognized argument: {args}"
+  danger:
+    refuse_non_interactive: "Non-interactive context: refused by default (pass -y / --yes to execute)"
 
 render:
   header_prefix: "$ "

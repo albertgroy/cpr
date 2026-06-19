@@ -21,6 +21,8 @@ cli:
 
     更多说明见 `cpr --help`。
   unknown_args: "未识别的参数：{args}"
+  danger:
+    refuse_non_interactive: "非交互上下文：默认拒绝执行（如需执行请加 -y / --yes）"
 
 render:
   header_prefix: "$ "

@@ -84,6 +84,44 @@ def test_danger_no_and_yes(monkeypatch, tmp_path, capsys):
     assert "err" in output.err
 
 
+def test_danger_no_stdin_refuses_quietly(monkeypatch, tmp_path, capsys):
+    """Non-interactive stdin (piped / /dev/null) -> default N, exit 0, stderr notice, no executor call."""
+    monkeypatch.setenv("CPR_HOME", str(tmp_path))
+    monkeypatch.setattr("cpr.cli.main.find_help", lambda *a, **k: {"sub_path": ["install", "java"], "help_text": "h", "help_source": "s --help", "help_truncated_at_size": None})
+    response = {"schema_version": "1", "prompt_version": "p", "result": {"summary": "s", "usage": "u", "candidates": [{"token": "t", "kind": "id", "desc": ""}], "danger": True, "danger_reason": "writes", "exec_template": "echo {id}", "exec_template_args": {"id": {"from": "candidates", "kind": "id"}}, "exec_shell_mode": "direct"}}
+    monkeypatch.setattr("cpr.cli.main.ApiClient.resolve", lambda *a, **k: response)
+    monkeypatch.setattr("cpr.cli.main._stdin_is_interactive", lambda: False)
+
+    def boom(self, cmd, mode):
+        raise AssertionError("executor must not run when stdin is non-interactive")
+    monkeypatch.setattr("cpr.cli.main.Executor.run_sync", boom)
+
+    assert main(["sdk", "install", "java"]) == 0
+    captured = capsys.readouterr()
+    assert "Non-interactive context" in captured.err or "非交互上下文" in captured.err
+
+
+def test_danger_eof_refuses_quietly(monkeypatch, tmp_path, capsys):
+    """EOFError from input() (e.g. closed stdin) -> default N, exit 0, stderr notice, no executor call."""
+    monkeypatch.setenv("CPR_HOME", str(tmp_path))
+    monkeypatch.setattr("cpr.cli.main.find_help", lambda *a, **k: {"sub_path": ["install", "java"], "help_text": "h", "help_source": "s --help", "help_truncated_at_size": None})
+    response = {"schema_version": "1", "prompt_version": "p", "result": {"summary": "s", "usage": "u", "candidates": [{"token": "t", "kind": "id", "desc": ""}], "danger": True, "danger_reason": "writes", "exec_template": "echo {id}", "exec_template_args": {"id": {"from": "candidates", "kind": "id"}}, "exec_shell_mode": "direct"}}
+    monkeypatch.setattr("cpr.cli.main.ApiClient.resolve", lambda *a, **k: response)
+    monkeypatch.setattr("cpr.cli.main._stdin_is_interactive", lambda: True)
+
+    def raise_eof(prompt):
+        raise EOFError
+    monkeypatch.setattr("builtins.input", raise_eof)
+
+    def boom(self, cmd, mode):
+        raise AssertionError("executor must not run on EOFError")
+    monkeypatch.setattr("cpr.cli.main.Executor.run_sync", boom)
+
+    assert main(["sdk", "install", "java"]) == 0
+    captured = capsys.readouterr()
+    assert "Non-interactive context" in captured.err or "非交互上下文" in captured.err
+
+
 def test_fixture_help_and_payload(tmp_path):
     assert _fixture_help("__quota", [])["sub_path"] == []
     assert _fixture_help("git", ["status"])["sub_path"] == ["status"]

@@ -120,7 +120,14 @@ def _maybe_execute(args: list[str], response: dict[str, Any], yes: bool) -> int:
     if not result.get("danger"):
         return 0
     if not yes:
-        answer = input("确认执行？(y/N) ")
+        if not _stdin_is_interactive():
+            print(_t("cli.danger.refuse_non_interactive"), file=sys.stderr)
+            return 0
+        try:
+            answer = input("确认执行？(y/N) ")
+        except EOFError:
+            print(_t("cli.danger.refuse_non_interactive"), file=sys.stderr)
+            return 0
         if answer.lower() != "y":
             return 0
     command = _render_exec_template(result)
@@ -130,6 +137,19 @@ def _maybe_execute(args: list[str], response: dict[str, Any], yes: bool) -> int:
     if executed.stderr:
         print(executed.stderr, file=sys.stderr, end="")
     return executed.exit_code
+
+
+def _stdin_is_interactive() -> bool:
+    isatty = getattr(sys.stdin, "isatty", None)
+    try:
+        return bool(isatty()) if callable(isatty) else False
+    except (ValueError, OSError):
+        return False
+
+
+def _t(key: str) -> str:
+    from cpr.i18n import I18n, resolve_locale
+    return I18n(resolve_locale()).t(key)
 
 
 def _render_exec_template(result: dict[str, Any]) -> str:
