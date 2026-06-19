@@ -1,0 +1,40 @@
+# macOS / 系统噪音
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# 编辑器 / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python（为 T-001 准备）
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+.env
+.envrc
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 依赖锁定相关临时
+pip-wheel-metadata/
+.uv-cache/
+
+# CCB 运行时与 provider 残留：仅保留拓扑配置与共享记忆
+.ccb/*
+!.ccb/ccb.config
+!.ccb/ccb_memory.md
