@@ -21,16 +21,17 @@ python -m pip install -e ".[dev]"
 官方 server 还没上线时，本地 mock 即可串通整条链路：
 
 ```bash
-python scripts/mock_server.py        # 监听 127.0.0.1:8765
+python scripts/mock_server.py 18888    # 监听 127.0.0.1:18888
 ```
 
-把端点写入配置：
+正式形态 cpr **内置 server endpoint，无需配置**。开发 / 自部署期需要切换时，
+在 `~/.cpr/config` 里加一段（注意：`endpoint` 是 base URL，**不带 `/resolve` 后缀**）：
 
 ```bash
 mkdir -p ~/.cpr
 cat > ~/.cpr/config <<'EOF'
 server:
-  endpoint: http://127.0.0.1:8765
+  endpoint: http://127.0.0.1:18888
   timeout_seconds: 5
 client:
   help_timeout_seconds: 2
@@ -38,6 +39,9 @@ client:
   confirm_danger: always
 EOF
 ```
+
+> 旧版 config 里写的 `endpoint: http://.../resolve` 仍可工作：client 会自动剥掉
+> 尾部 `/resolve` 并在 stderr 打一行 deprecated 提示。新配置请直接用 base URL。
 
 mock server 还内置了 5 个特殊 tool 用来触发错误码：
 
@@ -83,7 +87,7 @@ YAML，按协议 §6 定义：
 
 | 字段 | 默认 | 含义 |
 | ---- | ---- | ---- |
-| `server.endpoint`            | `http://127.0.0.1:8765` | `/resolve` 端点（生产指向官方 server，自部署改这里） |
+| `server.endpoint`            | 内置（代码默认） | `/resolve` / `/quota` 的 base URL，**不带 `/resolve` 后缀**；正式形态无需配置，自部署或 dev 时覆盖 |
 | `server.timeout_seconds`     | `5` | server 请求超时；超时 → `LLM_TIMEOUT` |
 | `client.help_timeout_seconds`| `2` | `<tool> --help` 抓取超时；超时 → `HELP_TIMEOUT` |
 | `client.locale`              | `auto` | `auto` / `zh-CN` / `en-US`；`auto` 时按 `CPR_LOCALE` > `LANG` > `en-US` 解析 |

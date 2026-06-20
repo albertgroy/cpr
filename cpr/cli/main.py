@@ -13,12 +13,11 @@ import uuid
 import yaml
 
 from cpr import __version__
-from cpr.cli.api import ApiClient, ApiError, ERROR_EXIT_CODES, SCHEMA_VERSION
+from cpr.cli.api import ApiClient, ApiError, DEFAULT_ENDPOINT, ERROR_EXIT_CODES, SCHEMA_VERSION
 from cpr.cli.cache import ClientCache, cache_key
 from cpr.cli.redact import redact_args
 from cpr.core.executor import Executor
 
-DEFAULT_ENDPOINT = "http://127.0.0.1:8765"
 HELP_LIMIT = 65536
 TEMPLATE_PATTERN = re.compile(r"\{([a-z][a-z0-9_]*)\}")
 FORBIDDEN_TEMPLATE = re.compile(r"[;&|<>$`\\\n\r]")
@@ -48,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         response = cache.get(key)
         if response is None:
             payload = _payload(home, config, locale, tool, tool_args, help_info)
-            response = ApiClient(config.get("server", {}).get("endpoint", DEFAULT_ENDPOINT), float(config.get("server", {}).get("timeout_seconds", 5))).resolve(payload)
+            response = ApiClient(config.get("server", {}).get("endpoint"), float(config.get("server", {}).get("timeout_seconds", 5))).resolve(payload)
             _validate_schema(response)
             result = response.get("result", {})
             _validate_template(result)
@@ -204,7 +203,7 @@ def _parse(argv: list[str] | None) -> argparse.Namespace:
 
 def _load_config(home: Path) -> dict[str, Any]:
     path = home / "config"
-    config: dict[str, Any] = {"server": {"endpoint": DEFAULT_ENDPOINT, "timeout_seconds": 5}, "cache": {"dir": str(home / "cache")}, "client": {"locale": "auto"}}
+    config: dict[str, Any] = {"server": {"timeout_seconds": 5}, "cache": {"dir": str(home / "cache")}, "client": {"locale": "auto"}}
     if path.exists():
         loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         if isinstance(loaded, dict):
@@ -262,7 +261,7 @@ def _diag(home: Path, config: dict[str, Any]) -> int:
 
 def _quota(home: Path, config: dict[str, Any]) -> int:
     try:
-        data = ApiClient(config.get("server", {}).get("endpoint", DEFAULT_ENDPOINT)).quota(_client_id(home, config))
+        data = ApiClient(config.get("server", {}).get("endpoint")).quota(_client_id(home, config))
         print(json.dumps(data, ensure_ascii=False))
         return 0
     except ApiError as exc:

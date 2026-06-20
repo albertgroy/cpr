@@ -4,7 +4,7 @@ from urllib.error import URLError
 
 import pytest
 
-from cpr.cli.api import ApiClient, ApiError
+from cpr.cli.api import ApiClient, ApiError, DEFAULT_ENDPOINT
 from cpr.cli.main import _validate_template, find_help, main, render_response
 
 
@@ -84,3 +84,35 @@ def test_main_server_error_exit(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr("cpr.cli.main.ApiClient.resolve", lambda *a, **k: (_ for _ in ()).throw(ApiError("QUOTA_EXCEEDED", "quota", {"quota": {"used": 50, "limit": 50}, "error": {"retry_after_seconds": 7200}})))
     assert main(["x"]) == 4
     assert "50/50" in capsys.readouterr().err
+
+
+def test_endpoint_default_when_missing():
+    """ApiClient(None) falls back to the hard-coded DEFAULT_ENDPOINT (no /resolve suffix)."""
+    client = ApiClient(None)
+    assert client.endpoint == DEFAULT_ENDPOINT.rstrip("/")
+    assert not client.endpoint.endswith("/resolve")
+
+
+def test_endpoint_strips_legacy_resolve_suffix(monkeypatch, capsys):
+    """Old configs with `endpoint: http://x/resolve` are accepted, stripped, and a deprecation notice is printed.
+
+    Verifies the actual request URL is `http://x/resolve` (not `http://x/resolve/resolve`).
+    """
+    captured_url = {}
+
+    class FakeResp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return None
+        def read(self): return b'{"schema_version": "1"}'
+
+    def fake_urlopen(req, timeout=None):
+        captured_url["url"] = req.full_url if hasattr(req, "full_url") else str(req)
+        return FakeResp()
+
+    monkeypatch.setattr("cpr.cli.api.urlopen", fake_urlopen)
+    client = ApiClient("http://example.test/resolve")
+    assert client.endpoint == "http://example.test"
+    err = capsys.readouterr().err
+    assert "deprecated" in err.lower()
+    client.resolve({})
+    assert captured_url["url"] == "http://example.test/resolve"

@@ -23,6 +23,8 @@ cli:
   unknown_args: "unrecognized argument: {args}"
   danger:
     refuse_non_interactive: "Non-interactive context: refused by default (pass -y / --yes to execute)"
+  config:
+    endpoint_deprecated_resolve_suffix: "(deprecated: server.endpoint should be a base URL; ignored trailing /resolve)"
 
 render:
   header_prefix: "$ "

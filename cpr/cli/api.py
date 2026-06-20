@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import sys
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 SCHEMA_VERSION = "1"
+DEFAULT_ENDPOINT = "http://127.0.0.1:18888"  # T-003 上线时改为发布 server
 ERROR_EXIT_CODES = {
     "HELP_NOT_FOUND": 2,
     "HELP_TIMEOUT": 2,
@@ -34,8 +36,12 @@ class ApiError(Exception):
 
 
 class ApiClient:
-    def __init__(self, endpoint: str, timeout_seconds: float = 5) -> None:
-        self.endpoint = endpoint.rstrip("/")
+    def __init__(self, endpoint: str | None, timeout_seconds: float = 5) -> None:
+        base = (endpoint or DEFAULT_ENDPOINT).rstrip("/")
+        if base.endswith("/resolve"):
+            print(_deprecated_resolve_suffix_msg(), file=sys.stderr)
+            base = base[: -len("/resolve")].rstrip("/")
+        self.endpoint = base
         self.timeout_seconds = timeout_seconds
 
     def resolve(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -68,3 +74,8 @@ def _load_error(exc: HTTPError) -> dict[str, Any]:
         return json.loads(exc.read().decode("utf-8"))
     except Exception:
         return {"error": {"code": "SERVER_ERROR", "message": str(exc)}}
+
+
+def _deprecated_resolve_suffix_msg() -> str:
+    from cpr.i18n import I18n, resolve_locale
+    return I18n(resolve_locale()).t("cli.config.endpoint_deprecated_resolve_suffix")

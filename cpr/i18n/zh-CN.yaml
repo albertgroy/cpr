@@ -23,6 +23,8 @@ cli:
   unknown_args: "未识别的参数：{args}"
   danger:
     refuse_non_interactive: "非交互上下文：默认拒绝执行（如需执行请加 -y / --yes）"
+  config:
+    endpoint_deprecated_resolve_suffix: "(deprecated: server.endpoint 应为 base URL，已自动忽略尾部 /resolve)"
 
 render:
   header_prefix: "$ "
