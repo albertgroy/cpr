@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "cache": "miss",
+  "prompt_version": "p-2026-06-19.1",
+  "quota": {"used": 1, "limit": 50, "reset_at": "2026-06-20T00:00:00Z", "reset_in_seconds": 28800},
+  "result": {
+    "summary": "Show working tree status",
+    "usage": "git status",
+    "candidates": [{"token": "--short", "desc": "short output", "kind": "flag"}],
+    "notes": [],
+    "danger": false,
+    "help_truncated": false,
+    "help_truncated_at_size": null
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "client_id": "00000000-0000-4000-8000-000000000001",
+  "client_version": "0.2.0",
+  "locale": "en-US",
+  "tool": "git",
+  "args": ["status"],
+  "sub_path": ["status"],
+  "help_text": "usage: git status",
+  "help_source": "git status --help",
+  "help_truncated_at_size": null
+}

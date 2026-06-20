@@ -1,0 +1,90 @@
+# 中文（简体）固定文案。任何新增 key 必须同时在 en-US.yaml 中提供。
+# 占位符 {name} 由 cpr.i18n.I18n.t(..., name=value) 注入。
+
+app:
+  name: cpr
+  tagline: AI 起手式 CLI
+
+cli:
+  no_args: |-
+    cpr — AI 起手式 CLI（让 AI 替你查命令的起手式）。
+
+    用法：
+      cpr <tool> [args ...]
+
+    示例：
+      cpr sdk
+      cpr sdk install java
+      cpr git status
+      cpr --quota
+      cpr --diag
+
+    更多说明见 `cpr --help`。
+  unknown_args: "未识别的参数：{args}"
+  danger:
+    refuse_non_interactive: "非交互上下文：默认拒绝执行（如需执行请加 -y / --yes）"
+  config:
+    endpoint_deprecated_resolve_suffix: "(deprecated: server.endpoint 应为 base URL，已自动忽略尾部 /resolve)"
+
+render:
+  header_prefix: "$ "
+  usage_label: "用法"
+  candidates_label: "候选"
+  notes_label: "备注"
+  candidates_more: "… 还有 {count} 项（已折叠）"
+  candidates_kind:
+    id: "标识"
+    flag: "选项"
+    subcommand: "子命令"
+    enum: "枚举值"
+    value: "取值"
+  empty_candidates: "（无候选）"
+  table_header_token: "TOKEN"
+  table_header_kind: "TYPE"
+  table_header_desc: "DESCRIPTION"
+
+danger:
+  banner: "危险：{reason}"
+  prompt: "确认执行？(y/N) "
+  cancelled: "已取消，未执行命令。"
+  exec_template_label: "将执行"
+
+quota:
+  status: "AI 额度：{used}/{limit}（{hours} 小时后重置）"
+  unknown: "AI 额度：未知"
+
+error:
+  generic_title: "AI 起手式失败"
+  HELP_NOT_FOUND:
+    title: "未识别的命令 / 工具未安装：{tool}"
+    hint: "请确认 `{tool}` 已安装并支持 `--help`。"
+  HELP_TIMEOUT:
+    title: "`{tool} --help` 超时（>{timeout}s）"
+    hint: "可在 ~/.cpr/config 中调高 client.help_timeout_seconds。"
+  BAD_REQUEST:
+    title: "请求协议错误：{message}"
+    hint: "通常是 client/server 实现 bug，请上报。"
+  INVALID_CLIENT:
+    title: "client 身份非法：{message}"
+    hint: "可删除 ~/.cpr/config 中的 client.id 让 cpr 重新生成。"
+  INVALID_TEMPLATE:
+    title: "AI 返回的执行模板不合法（含禁用字符或非法占位符），请重试。"
+    hint: "若反复出现，请 `cpr --diag` 后将 prompt_version 上报。"
+  SCHEMA_MISMATCH:
+    title: "client 与 server 协议版本不匹配（client v{client} ↔ server v{server}），请升级。"
+    hint: "运行 `pip install -U cpr` 或检查自部署 server 版本。"
+  QUOTA_EXCEEDED:
+    title: "今日 AI 额度已用完（{used}/{limit}），{hours} 小时后重置。"
+    hint: "可在 ~/.cpr/config 中把 server.endpoint 切换到自部署 server。"
+  LLM_PARSE_FAILED:
+    title: "AI 解析失败：{message}"
+    hint: "可换更明确的命令再试一次。"
+  LLM_TIMEOUT:
+    title: "AI 解析超时（>{timeout}s）"
+    hint: "网络抖动时常见；稍后再试或调高 server.timeout_seconds。"
+  SERVER_ERROR:
+    title: "server 内部错误：{message}"
+    hint: "请稍后重试；持续失败请上报。"
+  NETWORK_UNREACHABLE:
+    title: "AI 服务不可达，请检查 ~/.cpr/config 中的 server.endpoint。"
+    hint: "可改为本地 mock：`python scripts/mock_server.py` 后把 endpoint 指向 http://127.0.0.1:8765。"

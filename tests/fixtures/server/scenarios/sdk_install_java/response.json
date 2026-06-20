@@ -1,0 +1,19 @@
+{
+  "schema_version": "1",
+  "cache": "miss",
+  "prompt_version": "p-2026-06-19.1",
+  "quota": {"used": 1, "limit": 50, "reset_at": "2026-06-20T00:00:00Z", "reset_in_seconds": 28800},
+  "result": {
+    "summary": "Install Java with SDKMAN",
+    "usage": "sdk install java <identifier>",
+    "candidates": [{"token": "17.0.10-tem", "desc": "Temurin 17 LTS", "kind": "id"}],
+    "notes": ["Downloads and writes into ~/.sdkman."],
+    "danger": true,
+    "danger_reason": "writes to SDKMAN directories",
+    "exec_template": "sdk install java {identifier}",
+    "exec_template_args": {"identifier": {"from": "candidates", "kind": "id"}},
+    "exec_shell_mode": "bash-lc-source",
+    "help_truncated": false,
+    "help_truncated_at_size": null
+  }
+}
