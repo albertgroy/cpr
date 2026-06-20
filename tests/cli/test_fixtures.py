@@ -15,6 +15,12 @@ def test_fixture_three_file_layout():
         ROOT / "errors" / "server_error",
         ROOT / "errors" / "invalid_template",
         ROOT / "errors" / "schema_mismatch",
+        ROOT / "errors" / "help_not_found",
+        ROOT / "errors" / "help_timeout",
+        ROOT / "errors" / "bad_request",
+        ROOT / "errors" / "invalid_client",
+        ROOT / "errors" / "llm_parse_failed",
+        ROOT / "errors" / "network_unreachable",
     ]
     for directory in expected:
         assert (directory / "request.json").exists()
@@ -29,6 +35,12 @@ def test_error_fixture_codes():
         "llm_timeout": "LLM_TIMEOUT",
         "server_error": "SERVER_ERROR",
         "schema_mismatch": "SCHEMA_MISMATCH",
+        "help_not_found": "HELP_NOT_FOUND",
+        "help_timeout": "HELP_TIMEOUT",
+        "bad_request": "BAD_REQUEST",
+        "invalid_client": "INVALID_CLIENT",
+        "llm_parse_failed": "LLM_PARSE_FAILED",
+        "network_unreachable": "NETWORK_UNREACHABLE",
     }
     for name, code in codes.items():
         response = json.loads((ROOT / "errors" / name / "response.json").read_text(encoding="utf-8"))
