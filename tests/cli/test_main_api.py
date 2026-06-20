@@ -5,7 +5,8 @@ from urllib.error import URLError
 import pytest
 
 from cpr.cli.api import ApiClient, ApiError, DEFAULT_ENDPOINT
-from cpr.cli.main import _validate_template, find_help, main, render_response
+from cpr.cli.main import _validate_template, find_help, main
+from cpr.cli.render import render_response
 
 
 class FakeRun:
@@ -84,6 +85,34 @@ def test_main_server_error_exit(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr("cpr.cli.main.ApiClient.resolve", lambda *a, **k: (_ for _ in ()).throw(ApiError("QUOTA_EXCEEDED", "quota", {"quota": {"used": 50, "limit": 50}, "error": {"retry_after_seconds": 7200}})))
     assert main(["x"]) == 4
     assert "50/50" in capsys.readouterr().err
+
+
+def test_main_renders_via_render_module(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("CPR_HOME", str(tmp_path))
+    (tmp_path / "config").write_text("client:\n  id: 00000000-0000-4000-8000-000000000001\n  locale: en-US\ncache:\n  dir: " + str(tmp_path / "cache") + "\n", encoding="utf-8")
+    monkeypatch.setattr("cpr.cli.main.find_help", lambda *a, **k: {"sub_path": ["status"], "help_text": "help", "help_source": "git status --help", "help_truncated_at_size": None})
+    monkeypatch.setattr("cpr.cli.main.ApiClient.resolve", lambda *a, **k: {"schema_version": "1", "prompt_version": "p", "result": {"summary": "s", "usage": "git status", "danger": False}})
+    called = {}
+
+    def fake_render(tool, args, response, **kwargs):
+        called["value"] = (tool, args, kwargs.get("locale"))
+        return "rendered-by-module"
+
+    monkeypatch.setattr("cpr.cli.main.render_response", fake_render)
+    assert main(["git", "status"]) == 0
+    assert called["value"] == ("git", ["status"], "en-US")
+    assert "rendered-by-module" in capsys.readouterr().out
+
+
+def test_main_quota_error_uses_localized_renderer(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("CPR_HOME", str(tmp_path))
+    monkeypatch.setenv("CPR_LOCALE", "en-US")
+    monkeypatch.setattr("cpr.cli.main.find_help", lambda *a, **k: {"sub_path": [], "help_text": "help", "help_source": "x --help", "help_truncated_at_size": None})
+    monkeypatch.setattr("cpr.cli.main.ApiClient.resolve", lambda *a, **k: (_ for _ in ()).throw(ApiError("QUOTA_EXCEEDED", "quota", {"quota": {"used": 50, "limit": 50}, "error": {"retry_after_seconds": 7200}})))
+    assert main(["x"]) == 4
+    err = capsys.readouterr().err
+    assert "Daily AI quota exhausted" in err
+    assert "今日 AI 额度" not in err
 
 
 def test_endpoint_default_when_missing():
